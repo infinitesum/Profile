@@ -22,18 +22,15 @@ for section in ['general', 'policy', 'server_remote', 'filter_remote', 'rewrite_
             # 移除可能的section标题
             conf_content = re.sub(r'^\[' + section + r'\]\s*', '', conf_content, flags=re.MULTILINE).strip()
 
-        # 构造section的正则表达式，用于定位section
-        section_regex = re.compile(r'(\[' + re.escape(section) + r'\])\s*([\s\S]*?)(?=\n\[\w+\]|$)', flags=re.MULTILINE)
-        match = section_regex.search(qx_content)
-        if match:
-            # 获取当前section的内容
-            existing_section_content = match.group(2)
-            # 检查当前section的内容是否已经包含了要添加的内容
-            if conf_content in existing_section_content:
-                print(f"{section} section的内容已存在，跳过添加。")
-                continue
-            # 替换对应section下的内容
-            qx_content = section_regex.sub(r'\1\n' + conf_content + '\n\2', qx_content)
+        # 检查quantumultX-update文件中的section内容是否已包含要添加的内容
+        section_pattern = re.compile(r'(\[' + re.escape(section) + r'\])\s*([\s\S]*?)(?=\n\[\w+\]|$)', flags=re.MULTILINE)
+        match = section_pattern.search(qx_content)
+        if match and conf_content in match.group(2):
+            print(f"{section} section的内容已存在，跳过添加。")
+            continue
+        
+        # 替换对应section下的内容
+        qx_content = section_pattern.sub(r'\1\n' + conf_content + r'\n\2', qx_content)
     else:
         print(f'未找到 {conf_file_path} 文件，跳过此section的更新。')
 
